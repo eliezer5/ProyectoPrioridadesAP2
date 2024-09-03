@@ -141,10 +141,12 @@ class MainActivity : ComponentActivity() {
                                         return@OutlinedButton
                                     }
                                     scope.launch {
+
                                         savePrioridad(PrioridadEntity(
                                             descripcion = descripcion,
                                             diasCompromiso = diaCompromiso.toInt()
                                         ))
+
                                         descripcion = ""
                                         diaCompromiso = ""
                                     }
