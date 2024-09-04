@@ -122,6 +122,7 @@ class MainActivity : ComponentActivity() {
 
                                     descripcion = ""
                                     diaCompromiso = ""
+                                    errorMessage = ""
                                 },
                                 modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
 
