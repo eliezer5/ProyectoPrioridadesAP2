@@ -23,6 +23,12 @@ interface PrioridadDao {
     )
     suspend fun find(id: Int):PrioridadEntity?
 
+    @Query(
+        """
+        SELECT * FROM Prioridades WHERE descripcion LIKE :descripcion
+        """
+    )
+    suspend fun buscarDescripcion(descripcion: String): PrioridadEntity?
 
     @Delete
     suspend fun delete(prioridad: PrioridadEntity)

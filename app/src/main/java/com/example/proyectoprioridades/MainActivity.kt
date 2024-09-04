@@ -45,6 +45,7 @@ import com.example.proyectoprioridades.database.PrioridadDb
 import com.example.proyectoprioridades.entities.PrioridadEntity
 import com.example.proyectoprioridades.ui.theme.ProyectoPrioridadesTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -127,6 +128,8 @@ class MainActivity : ComponentActivity() {
 
                             val scope = rememberCoroutineScope()
                             val intDiaCompromiso = diaCompromiso.toIntOrNull()
+
+                            val descripcionExiste = runBlocking {buscarPorDescripcion(descripcion)}
                             OutlinedButton(
 
                                 onClick = {
@@ -140,6 +143,14 @@ class MainActivity : ComponentActivity() {
                                         errorMessage = "Dias Compromiso vacio"
                                         return@OutlinedButton
                                     }
+
+                                    if( descripcionExiste != null){
+
+                                        errorMessage ="Esta descripción ya existe"
+                                        return@OutlinedButton
+                                    }
+
+
                                     scope.launch {
 
                                         savePrioridad(PrioridadEntity(
@@ -258,6 +269,10 @@ class MainActivity : ComponentActivity() {
         HorizontalDivider()
     }
 
+    private suspend fun buscarPorDescripcion(descripcion: String): PrioridadEntity? {
+        val existe =prioridadDb.PrioridadDao().buscarDescripcion(descripcion)
+        return existe
+    }
     @Preview(showBackground = true, showSystemUi = true)
     @Composable
     fun GreetingPreview() {
