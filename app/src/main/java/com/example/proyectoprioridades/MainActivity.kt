@@ -2,6 +2,7 @@ package com.example.proyectoprioridades
 
 import android.graphics.Paint.Style
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -46,6 +47,7 @@ import com.example.proyectoprioridades.entities.PrioridadEntity
 import com.example.proyectoprioridades.ui.theme.ProyectoPrioridadesTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import javax.inject.Scope
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -109,24 +111,28 @@ class MainActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.padding(2.dp))
                         errorMessage?.let { Text(text = it, color= Color.Red) }
+                        val scope = rememberCoroutineScope()
                         Row (
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                             )
                         {
                             OutlinedButton(
-                                onClick = { /*TODO*/ },
+                                onClick = {
+
+                                    descripcion = ""
+                                    diaCompromiso = ""
+                                },
                                 modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
 
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "Guardar"
+                                    contentDescription = "Nuevo"
                                 )
                                 Text(text = "Nuevo")
                             }
 
-                            val scope = rememberCoroutineScope()
                             val intDiaCompromiso = diaCompromiso.toIntOrNull()
 
                             val descripcionExiste = runBlocking {buscarPorDescripcion(descripcion)}
@@ -156,10 +162,13 @@ class MainActivity : ComponentActivity() {
                                         savePrioridad(PrioridadEntity(
                                             descripcion = descripcion,
                                             diasCompromiso = diaCompromiso.toInt()
+
                                         ))
+
 
                                         descripcion = ""
                                         diaCompromiso = ""
+
                                     }
                                 }
                             ) {
