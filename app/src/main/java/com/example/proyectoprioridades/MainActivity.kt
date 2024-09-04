@@ -142,12 +142,16 @@ class MainActivity : ComponentActivity() {
                                 onClick = {
                                     if (descripcion.isBlank()){
 
-                                        errorMessage = "Descripcion vacia"
+                                        errorMessage = "Descripción vacia"
                                         return@OutlinedButton
                                     }
-                                    if (intDiaCompromiso == null || intDiaCompromiso < 0  ){
+                                    if (intDiaCompromiso == null ){
 
-                                        errorMessage = "Dias Compromiso vacio"
+                                        errorMessage = "Dias Compromiso vacio "
+                                        return@OutlinedButton
+                                    }
+                                    if (intDiaCompromiso <= 0){
+                                        errorMessage = "Dias Compromiso debe ser mayor que cero "
                                         return@OutlinedButton
                                     }
 
@@ -169,6 +173,7 @@ class MainActivity : ComponentActivity() {
 
                                         descripcion = ""
                                         diaCompromiso = ""
+                                        errorMessage = ""
 
                                     }
                                 }
