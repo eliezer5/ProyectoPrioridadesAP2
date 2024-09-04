@@ -145,15 +145,24 @@ class MainActivity : ComponentActivity() {
                                         errorMessage = "Descripción vacia"
                                         return@OutlinedButton
                                     }
-                                    if (intDiaCompromiso == null ){
+                                    if (diaCompromiso.isBlank() ){
 
-                                        errorMessage = "Dias Compromiso vacio "
+                                        errorMessage = "Dias Compromiso vacio"
                                         return@OutlinedButton
                                     }
+
+                                    if (intDiaCompromiso == null ){
+
+                                        errorMessage = "Dias Compromiso debe ser un entero "
+                                        return@OutlinedButton
+                                    }
+
                                     if (intDiaCompromiso <= 0){
                                         errorMessage = "Dias Compromiso debe ser mayor que cero "
                                         return@OutlinedButton
                                     }
+
+
 
                                     if( descripcionExiste != null){
 
@@ -287,6 +296,16 @@ class MainActivity : ComponentActivity() {
     private suspend fun buscarPorDescripcion(descripcion: String): PrioridadEntity? {
         val existe =prioridadDb.PrioridadDao().buscarDescripcion(descripcion)
         return existe
+    }
+
+    private fun esString(descripcion: String): Boolean {
+        return try {
+            descripcion.toString()
+            true
+        } catch (e: NumberFormatException){
+            false
+        }
+
     }
     @Preview(showBackground = true, showSystemUi = true)
     @Composable
