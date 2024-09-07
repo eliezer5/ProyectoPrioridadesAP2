@@ -51,14 +51,12 @@ fun PrioridadScreen(
     prioridadDb: PrioridadDb,
     prioridadId: Int
 ) {
-
     var descripcion by remember { mutableStateOf("") }
     var diaCompromiso by remember { mutableStateOf("") }
     var errorMessage: String? by remember { mutableStateOf(null) }
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
-
 
     Scaffold(
         floatingActionButton = {
@@ -127,7 +125,6 @@ fun PrioridadScreen(
                                 }
                             }
                         }
-
                         OutlinedButton(
                             onClick = {
                                 descripcion = ""
