@@ -1,4 +1,4 @@
-package com.example.proyectoprioridades.entities
+package com.example.proyectoprioridades.local.data.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

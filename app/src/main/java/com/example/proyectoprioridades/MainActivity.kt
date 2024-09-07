@@ -1,14 +1,11 @@
 package com.example.proyectoprioridades
 
-import android.graphics.Paint.Style
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,16 +49,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import androidx.room.Room
-import com.example.proyectoprioridades.database.PrioridadDb
-import com.example.proyectoprioridades.entities.PrioridadEntity
 import com.example.proyectoprioridades.presentacion.navigation.Screen
 import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadListScreen
 import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadScreen
+import com.example.proyectoprioridades.local.data.database.PrioridadDb
+import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 import com.example.proyectoprioridades.ui.theme.ProyectoPrioridadesTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import javax.inject.Scope
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -83,12 +80,54 @@ class MainActivity : ComponentActivity() {
     }
 
 
+
     @Preview(showBackground = true, showSystemUi = true)
     @Composable
-    fun GreetingPreview() {
+    fun PrioridadesPreview() {
         ProyectoPrioridadesTheme {
             val navHost = rememberNavController()
             PrioridadesNavHost(navHost)
+
+                                    scope.launch {
+
+                                        savePrioridad(
+                                            PrioridadEntity(
+                                            descripcion = descripcion,
+                                            diasCompromiso = diaCompromiso.toInt()
+
+                                        )
+                                        )
+
+
+                                        descripcion = ""
+                                        diaCompromiso = ""
+                                        errorMessage = ""
+
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "save button"
+                                )
+                                Text(text = "Guardar")
+
+                            }
+                        }
+
+                    }
+                }
+                val lifecycleOwner = LocalLifecycleOwner.current
+                val prioridadList by prioridadDb.PrioridadDao().getAll()
+                    .collectAsStateWithLifecycle(
+                        initialValue = emptyList(),
+                        lifecycleOwner = lifecycleOwner,
+                        minActiveState = Lifecycle.State.STARTED
+                    )
+                    PrioridadListScreen(prioridadList )
+
+
+            }
         }
     }
 
@@ -124,5 +163,46 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
+
+    @Composable
+    private fun PrioridadRow(it: PrioridadEntity) {
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = it.prioridadId.toString(),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                modifier = Modifier.weight(2f),
+                text = it.descripcion,
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(modifier = Modifier.weight(2f),
+                text = it.diasCompromiso.toString(),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+        }
+        HorizontalDivider()
+    }
+
+    private suspend fun buscarPorDescripcion(descripcion: String): PrioridadEntity? {
+        val existe =prioridadDb.PrioridadDao().buscarDescripcion(descripcion)
+        return existe
+    }
+    @Preview(showBackground = true, showSystemUi = true)
+    @Composable
+    fun PrioridadesPreview() {
+        ProyectoPrioridadesTheme {
+            PrioridadScreen()
+        }
+    }
 
 }
