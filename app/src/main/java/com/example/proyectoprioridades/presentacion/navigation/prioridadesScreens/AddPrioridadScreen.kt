@@ -38,8 +38,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.proyectoprioridades.database.PrioridadDb
-import com.example.proyectoprioridades.entities.PrioridadEntity
+import com.example.proyectoprioridades.local.data.database.PrioridadDb
+import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
