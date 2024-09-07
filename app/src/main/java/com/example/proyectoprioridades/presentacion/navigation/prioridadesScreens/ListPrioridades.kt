@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
+
 import com.example.proyectoprioridades.presentacion.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
