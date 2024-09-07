@@ -1,5 +1,6 @@
 package com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.materialIcon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -39,6 +43,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun PrioridadScreen(
     goPriordadList: () -> Unit,
@@ -48,6 +53,7 @@ fun PrioridadScreen(
     var descripcion by remember { mutableStateOf("") }
     var diaCompromiso by remember { mutableStateOf("") }
     var errorMessage: String? by remember { mutableStateOf(null) }
+    var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
@@ -144,7 +150,8 @@ fun PrioridadScreen(
                                 }
 
                                 if (intDiaCompromiso == null || intDiaCompromiso <= 0) {
-                                    errorMessage = "Días Compromiso debe ser mayor que cero y un entero válido"
+                                    errorMessage =
+                                        "Días Compromiso debe ser mayor que cero y un entero válido"
                                     return@OutlinedButton
                                 }
 
@@ -154,7 +161,7 @@ fun PrioridadScreen(
                                 }
 
                                 scope.launch {
-                                    if (prioridadId > 0){
+                                    if (prioridadId > 0) {
 
                                         prioridadDb.PrioridadDao().save(
                                             PrioridadEntity(
@@ -163,7 +170,7 @@ fun PrioridadScreen(
                                                 diasCompromiso = intDiaCompromiso // Usamos directamente intDiaCompromiso
                                             )
                                         )
-                                    }else{
+                                    } else {
                                         prioridadDb.PrioridadDao().save(
                                             PrioridadEntity(
                                                 descripcion = descripcion, // Usamos directamente descripcion
@@ -181,31 +188,58 @@ fun PrioridadScreen(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Guardar"
                             )
-                            if(prioridadId > 0){
+                            if (prioridadId > 0) {
                                 Text(text = "Editar")
-                            }else {
+                            } else {
 
                                 Text(text = "Guardar")
                             }
                         }
 
                         if (prioridadId >= 0) {
-                            OutlinedButton(
-                                onClick = {
-                                    scope.launch {
-                                        prioridadDb.PrioridadDao().delete(
-                                            PrioridadEntity(
-                                                prioridadId = prioridadId,
-                                                descripcion = descripcion, // Usamos directamente descripcion
-                                                diasCompromiso = intDiaCompromiso ?: 0 // Usamos directamente intDiaCompromiso
-                                            )
-                                        )
-                                    }
-                                },
+                            OutlinedButton(onClick = { showDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Eliminar",
+                                    tint = Color.Red
+                                )
 
-                            ) {
-                                Text(text = "Eliminar")
+                                Text(text = "Eliminar", color = Color.Red)
                             }
+
+                           if (showDialog){
+                               AlertDialog(
+                                   onDismissRequest = { showDialog = false },
+                                   title = { Text(text = "Confirmar eliminación")},
+                                   text = { Text(text = "Estas seguro de que desea eliminar esta prioridad?")},
+                                   confirmButton = {
+                                       OutlinedButton(
+                                           onClick = { scope.launch {
+                                               prioridadDb.PrioridadDao().delete(
+                                                   PrioridadEntity(
+                                                       prioridadId = prioridadId,
+                                                       descripcion = descripcion,
+                                                       diasCompromiso = diaCompromiso.toIntOrNull() ?: 0
+                                                   )
+                                               )
+                                           }
+                                               descripcion = ""
+                                               diaCompromiso = ""
+                                               errorMessage = "Prioridad Eliminada Correctamente"
+                                               showDialog = false  }
+                                       ) {
+                                           Text("Eliminar", color = Color.Red)
+                                       }
+                                   },
+                                   dismissButton = {
+                                       OutlinedButton(onClick = { showDialog = false }) {
+                                           Text(text = "cancelar")
+                                       }
+                                   })
+                           }
+
+
+
                         }
                     }
                 }
