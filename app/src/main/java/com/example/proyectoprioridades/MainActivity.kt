@@ -46,6 +46,7 @@ import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 import com.example.proyectoprioridades.ui.theme.ProyectoPrioridadesTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import androidx.lifecycle.compose.LocalLifecycleOwner
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -199,7 +200,7 @@ class MainActivity : ComponentActivity() {
 
                     }
                 }
-                val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+                val lifecycleOwner = LocalLifecycleOwner.current
                 val prioridadList by prioridadDb.PrioridadDao().getAll()
                     .collectAsStateWithLifecycle(
                         initialValue = emptyList(),
