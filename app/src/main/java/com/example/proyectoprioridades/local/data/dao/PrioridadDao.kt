@@ -1,12 +1,10 @@
-package com.example.proyectoprioridades.dao
+package com.example.proyectoprioridades.local.data.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Upsert
-import com.example.proyectoprioridades.entities.PrioridadEntity
-import java.util.concurrent.Flow
+import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 
 @Dao
 interface PrioridadDao {
@@ -21,7 +19,7 @@ interface PrioridadDao {
         LIMIT 1
         """
     )
-    suspend fun find(id: Int):PrioridadEntity?
+    suspend fun find(id: Int): PrioridadEntity?
 
     @Query(
         """

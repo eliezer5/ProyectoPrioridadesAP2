@@ -1,13 +1,10 @@
 package com.example.proyectoprioridades
 
-import android.graphics.Paint.Style
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,12 +41,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.room.Room
-import com.example.proyectoprioridades.database.PrioridadDb
-import com.example.proyectoprioridades.entities.PrioridadEntity
+import com.example.proyectoprioridades.local.data.database.PrioridadDb
+import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 import com.example.proyectoprioridades.ui.theme.ProyectoPrioridadesTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import javax.inject.Scope
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -176,11 +172,13 @@ class MainActivity : ComponentActivity() {
 
                                     scope.launch {
 
-                                        savePrioridad(PrioridadEntity(
+                                        savePrioridad(
+                                            PrioridadEntity(
                                             descripcion = descripcion,
                                             diasCompromiso = diaCompromiso.toInt()
 
-                                        ))
+                                        )
+                                        )
 
 
                                         descripcion = ""
