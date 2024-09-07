@@ -52,8 +52,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import androidx.room.Room
-import com.example.proyectoprioridades.database.PrioridadDb
-import com.example.proyectoprioridades.entities.PrioridadEntity
+import com.example.proyectoprioridades.local.data.database.PrioridadDb
 import com.example.proyectoprioridades.presentacion.navigation.Screen
 import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadListScreen
 import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadScreen
