@@ -299,16 +299,6 @@ class MainActivity : ComponentActivity() {
         val existe =prioridadDb.PrioridadDao().buscarDescripcion(descripcion)
         return existe
     }
-
-    private fun esString(descripcion: String): Boolean {
-        return try {
-            descripcion.toString()
-            true
-        } catch (e: NumberFormatException){
-            false
-        }
-
-    }
     @Preview(showBackground = true, showSystemUi = true)
     @Composable
     fun PrioridadesPreview() {
