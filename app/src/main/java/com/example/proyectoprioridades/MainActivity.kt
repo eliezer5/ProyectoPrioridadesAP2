@@ -1,10 +1,14 @@
 package com.example.proyectoprioridades
 
+import android.graphics.Paint.Style
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -39,14 +44,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import androidx.room.Room
 import com.example.proyectoprioridades.local.data.database.PrioridadDb
-import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
+import com.example.proyectoprioridades.presentacion.navigation.Screen
+import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadListScreen
+import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadScreen
 import com.example.proyectoprioridades.ui.theme.ProyectoPrioridadesTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import javax.inject.Scope
 
 class MainActivity : ComponentActivity() {
     private lateinit var prioridadDb: PrioridadDb
@@ -61,250 +75,53 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ProyectoPrioridadesTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
-                        PrioridadScreen()
-                    }
-                }
-            }
-        }
-    }
-    @Composable
-    fun PrioridadScreen() {
-        var descripcion by remember { mutableStateOf("") }
-        var diaCompromiso by remember { mutableStateOf("") }
-        var errorMessage: String? by remember { mutableStateOf(null) }
-
-        Scaffold { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(8.dp)
-            ) {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            label = { Text(text = "Descripción") },
-                            value = descripcion,
-                            onValueChange = { descripcion = it },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        OutlinedTextField(
-                            label = { Text(text = "Dias Compromiso")},
-                            value = diaCompromiso,
-                            onValueChange = {diaCompromiso = it},
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-                        )
-
-                        Spacer(modifier = Modifier.padding(2.dp))
-                        errorMessage?.let { Text(text = it, color= Color.Red) }
-                        val scope = rememberCoroutineScope()
-                        Row (
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                            )
-                        {
-                            OutlinedButton(
-                                onClick = {
-
-                                    descripcion = ""
-                                    diaCompromiso = ""
-                                    errorMessage = ""
-                                },
-                                modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
-
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Nuevo"
-                                )
-                                Text(text = "Nuevo")
-                            }
-
-                            val intDiaCompromiso = diaCompromiso.toIntOrNull()
-
-                            val descripcionExiste = runBlocking {buscarPorDescripcion(descripcion)}
-                            OutlinedButton(
-
-                                onClick = {
-                                    if (descripcion.isBlank()){
-
-                                        errorMessage = "Descripción vacia"
-                                        return@OutlinedButton
-                                    }
-                                    if (diaCompromiso.isBlank() ){
-
-                                        errorMessage = "Dias Compromiso vacio"
-                                        return@OutlinedButton
-                                    }
-
-                                    if (intDiaCompromiso == null ){
-
-                                        errorMessage = "Dias Compromiso debe ser un entero "
-                                        return@OutlinedButton
-                                    }
-
-                                    if (intDiaCompromiso <= 0){
-                                        errorMessage = "Dias Compromiso debe ser mayor que cero "
-                                        return@OutlinedButton
-                                    }
-
-
-
-                                    if( descripcionExiste != null){
-
-                                        errorMessage ="Esta descripción ya existe"
-                                        return@OutlinedButton
-                                    }
-
-
-                                    scope.launch {
-
-                                        savePrioridad(
-                                            PrioridadEntity(
-                                            descripcion = descripcion,
-                                            diasCompromiso = diaCompromiso.toInt()
-
-                                        )
-                                        )
-
-
-                                        descripcion = ""
-                                        diaCompromiso = ""
-                                        errorMessage = ""
-
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "save button"
-                                )
-                                Text(text = "Guardar")
-
-                            }
-                        }
-
-                    }
-                }
-                val lifecycleOwner = LocalLifecycleOwner.current
-                val prioridadList by prioridadDb.PrioridadDao().getAll()
-                    .collectAsStateWithLifecycle(
-                        initialValue = emptyList(),
-                        lifecycleOwner = lifecycleOwner,
-                        minActiveState = Lifecycle.State.STARTED
-                    )
-                    PrioridadListScreen(prioridadList )
-
-
+                val navHost = rememberNavController()
+                PrioridadesNavHost(navHost)
             }
         }
     }
 
-    private suspend fun savePrioridad(prioridad: PrioridadEntity){
-        prioridadDb.PrioridadDao().save(prioridad)
-    }
 
-    @Composable
-    fun PrioridadListScreen(prioridadList: List<PrioridadEntity>){
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(text = "Lista de prioridades", modifier = Modifier.align(Alignment.CenterHorizontally), style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Fila de títulos de las columnas
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp, 10.dp),
-
-
-            ) {
-                Text(
-                    text = "ID",
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = "Descripción",
-                    modifier = Modifier.weight(2f),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = "Días",
-                    modifier = Modifier.weight(2f),
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-            LazyColumn(modifier = Modifier
-                .fillMaxSize()
-                ) {
-
-
-
-
-                items(prioridadList) {
-                    PrioridadRow(it)
-                }
-
-            }
-
-        }
-    }
-
-    @Composable
-    private fun PrioridadRow(it: PrioridadEntity) {
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-
-        ) {
-            Text(
-                modifier = Modifier.weight(1f),
-                text = it.prioridadId.toString(),
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Text(
-                modifier = Modifier.weight(2f),
-                text = it.descripcion,
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Text(modifier = Modifier.weight(2f),
-                text = it.diasCompromiso.toString(),
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-        }
-        HorizontalDivider()
-    }
-
-    private suspend fun buscarPorDescripcion(descripcion: String): PrioridadEntity? {
-        val existe =prioridadDb.PrioridadDao().buscarDescripcion(descripcion)
-        return existe
-    }
     @Preview(showBackground = true, showSystemUi = true)
     @Composable
-    fun PrioridadesPreview() {
+    fun GreetingPreview() {
         ProyectoPrioridadesTheme {
-            PrioridadScreen()
+            val navHost = rememberNavController()
+            PrioridadesNavHost(navHost)
         }
     }
+
+    @Composable
+    fun PrioridadesNavHost(
+        navHostController: NavHostController
+    ) {
+        val lifecycleOwner = LocalLifecycleOwner.current
+        val prioridadList by prioridadDb.PrioridadDao().getAll()
+            .collectAsStateWithLifecycle(
+                initialValue = emptyList(),
+                lifecycleOwner = lifecycleOwner,
+                minActiveState = Lifecycle.State.STARTED
+            )
+        NavHost(navController = navHostController, startDestination = Screen.PrioridadList) {
+            composable<Screen.PrioridadList> {
+                PrioridadListScreen(
+                    prioridadList = prioridadList,
+                    onAddPriordad = {navHostController.navigate(Screen.Prioridad(0))},
+                    onPrioridadSelected = {navHostController.navigate(Screen.Prioridad(it))}
+                )
+               
+            }
+
+            composable<Screen.Prioridad>{
+                val prioridadId = it.toRoute<Screen.Prioridad>().prioridadId
+                PrioridadScreen(
+                    goPriordadList = {navHostController.navigate(Screen.PrioridadList)},
+                    prioridadDb,
+                    prioridadId
+                )
+            }
+        }
+    }
+
 
 }
