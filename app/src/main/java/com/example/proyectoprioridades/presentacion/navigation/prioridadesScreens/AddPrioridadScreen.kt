@@ -126,19 +126,22 @@ fun PrioridadScreen(
                                 }
                             }
                         }
-                        OutlinedButton(
-                            onClick = {
-                                descripcion = ""
-                                diaCompromiso = ""
-                                errorMessage = ""
-                            },
-                            modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Nuevo"
-                            )
-                            Text(text = "Nuevo")
+                        if(prioridadId ==0 ){
+
+                            OutlinedButton(
+                                onClick = {
+                                    descripcion = ""
+                                    diaCompromiso = ""
+                                    errorMessage = ""
+                                },
+                                modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Nuevo"
+                                )
+                                Text(text = "Nuevo")
+                            }
                         }
 
                         val intDiaCompromiso = diaCompromiso.toIntOrNull()
