@@ -21,9 +21,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 
@@ -32,11 +35,22 @@ import com.example.proyectoprioridades.presentacion.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrioridadListScreen(
-    prioridadList: List<PrioridadEntity>,
+    viewModel: PrioridadViewModel = hiltViewModel(),
     onAddPriordad: () -> Unit,
     onPrioridadSelected: (Int) -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    PrioridadListBodyScreen(uiState,onAddPriordad, onPrioridadSelected )
 
+}
+
+
+@Composable
+fun PrioridadListBodyScreen(
+    uiState: UiState,
+    onAddPriordad: () -> Unit,
+    onPrioridadSelected: (Int) -> Unit
+){
 
     Scaffold(
         floatingActionButton = {
@@ -50,8 +64,10 @@ fun PrioridadListScreen(
         }
 
     ) {
-        innerPadding ->
-        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            innerPadding ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
@@ -94,7 +110,7 @@ fun PrioridadListScreen(
             ) {
 
 
-                items(prioridadList) {
+                items(uiState.prioridades) {
                     PrioridadRow(it, onPrioridadSelected)
                 }
 
@@ -109,7 +125,9 @@ private fun PrioridadRow(it: PrioridadEntity, onPrioridadSelected: (Int) -> Unit
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { onPrioridadSelected(it.prioridadId?: 0)}.padding(12.dp)
+        modifier = Modifier
+            .clickable { onPrioridadSelected(it.prioridadId ?: 0) }
+            .padding(12.dp)
         ) {
         Text(
             modifier = Modifier.weight(1f),
