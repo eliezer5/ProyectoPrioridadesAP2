@@ -6,7 +6,7 @@ data class UiState(
     val prioridadId: Int? = null,
     val descripcion: String = "",
     val diasCompromiso: Int? = 0,
-    val errorMessage: String? = null,
+    var errorMessage: String? = null,
     val prioridades: List<PrioridadEntity> = emptyList()
 )
 

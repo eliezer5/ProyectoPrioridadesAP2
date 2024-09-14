@@ -10,4 +10,5 @@ sealed interface PrioridadIntent {
     data object getPrioridades: PrioridadIntent
     data class editarPrioridad(val prioridadId: Int) : PrioridadIntent
     data class buscarDescripcion(val descripcion: String): PrioridadIntent
+    data class validar(val uiState: UiState):PrioridadIntent
 }

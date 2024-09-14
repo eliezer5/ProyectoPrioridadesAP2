@@ -16,4 +16,5 @@ class PrioridadRepository @Inject constructor(
 
     fun getPrioridades() = prioridadDao.getAll()
     suspend fun buscarDescripcion(descripcion: String) = prioridadDao.buscarDescripcion(descripcion)
+
 }

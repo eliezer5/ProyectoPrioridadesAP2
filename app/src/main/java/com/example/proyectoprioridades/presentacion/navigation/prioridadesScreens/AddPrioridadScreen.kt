@@ -29,7 +29,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,12 +42,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 
-import com.example.proyectoprioridades.local.data.database.PrioridadDb
-import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
+import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
@@ -56,10 +53,11 @@ fun PrioridadScreen(
     viewModel: PrioridadViewModel = hiltViewModel(),
     onEvent: (PrioridadIntent) -> Unit,
     goPriordadList: () -> Unit,
+    prioridadId: Int
 
-    ) {
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    PrioridadBodyScreen(onEvent, uiState, goPriordadList)
+    PrioridadBodyScreen(onEvent, uiState, goPriordadList, prioridadId)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,16 +66,17 @@ fun PrioridadBodyScreen(
     onEvent: (PrioridadIntent) -> Unit,
     uiState: UiState,
     goPriordadList: () -> Unit,
+    prioridadId: Int
 
 
-    ) {
+) {
     var descripcion by remember { mutableStateOf("") }
     var diaCompromiso by remember { mutableStateOf("") }
     var errorMessage: String? by remember { mutableStateOf(null) }
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
-    val prioridadId = uiState.prioridadId ?: 0
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         floatingActionButton = {
@@ -111,24 +110,24 @@ fun PrioridadBodyScreen(
                         .padding(8.dp)
                 ) {
 
-                    if (prioridadId > 0) {
-
-                        Text(
-                            text = "Editar Prioridad",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(bottom = 15.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Agregar Prioridad",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .padding(bottom = 15.dp)
-                        )
-                    }
+//                    if (prioridadId > 0) {
+//
+//                        Text(
+//                            text = "Editar Prioridad",
+//                            style = MaterialTheme.typography.titleLarge,
+//                            modifier = Modifier
+//                                .align(Alignment.CenterHorizontally)
+//                                .padding(bottom = 15.dp)
+//                        )
+//                    } else {
+//                        Text(
+//                            text = "Agregar Prioridad",
+//                            style = MaterialTheme.typography.titleLarge,
+//                            modifier = Modifier
+//                                .align(Alignment.CenterHorizontally)
+//                                .padding(bottom = 15.dp)
+//                        )
+//                    }
 
                     OutlinedTextField(
                         label = { Text(text = "Descripción") },
@@ -141,7 +140,11 @@ fun PrioridadBodyScreen(
                         label = { Text(text = "Días Compromiso") },
                         value = uiState.diasCompromiso?.toString() ?: "",
                         onValueChange = { newValue ->
-                            onEvent(PrioridadIntent.onDiasCompromisoChange(newValue.toIntOrNull() ?: 0))
+                            onEvent(
+                                PrioridadIntent.onDiasCompromisoChange(
+                                    newValue.toIntOrNull() ?: 0
+                                )
+                            )
                         },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -149,117 +152,110 @@ fun PrioridadBodyScreen(
 
                     Spacer(modifier = Modifier.padding(2.dp))
 
-                    errorMessage?.let { Text(text = it, color = Color.Red) }
 
-                    val scope = rememberCoroutineScope()
 
+
+                    uiState.errorMessage?.let { error ->
+                        Text(text = error, color = Color.Red)
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-
-                        if (uiState.prioridadId != 0)
-
-                        onEvent(PrioridadIntent.editarPrioridad(prioridadId))
-
-
-                    }
-                }
-
-
-                if (uiState.prioridadId != 0) {
-
-                    OutlinedButton(
-                        onClick = {
-                            descripcion = ""
-                            diaCompromiso = ""
-                            errorMessage = ""
-                        },
-                        modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Nuevo"
-                        )
-                        Text(text = "Nuevo")
-                    }
-                }
-
-                val intDiaCompromiso = diaCompromiso.toIntOrNull()
-
-                val descripcionExiste =
-                    onEvent(PrioridadIntent.buscarDescripcion(descripcion))
-
-
-                OutlinedButton(
-                    onClick = {
-
-
-                        onEvent(PrioridadIntent.savePrioridad)
-//                        keyboardController?.hide()
-//                                    snackbarHostState.showSnackbar(
-//                                        "Prioridad editada correctamente"
-//                                    )
-                        goPriordadList()
-
-
-
-//                        onEvent(PrioridadIntent.nuevo)
-//                        keyboardController?.hide()
-
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Guardar"
-                    )
-                    if (prioridadId > 0) {
-                        Text(text = "Editar")
-                    } else {
-
-                        Text(text = "Guardar")
-                    }
-                }
-
-                if (prioridadId > 0) {
-                    OutlinedButton(onClick = { showDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Eliminar",
-                            tint = Color.Red
-                        )
-
-                        Text(text = "Eliminar", color = Color.Red)
-                    }
-
-                    if (showDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showDialog = false },
-                            title = { Text(text = "Confirmar eliminación") },
-                            text = { Text(text = "Estas seguro de que desea eliminar esta prioridad?") },
-                            confirmButton = {
-                                OutlinedButton(
-                                    onClick = {
-
-                                            onEvent(PrioridadIntent.deletePrioridad)
-                                            showDialog = false
-//                                            snackbarHostState.showSnackbar(
-//                                                "Prioridad eliminada correctamente",
-//                                                duration = SnackbarDuration.Short
-//                                            )
-                                            goPriordadList()
-
-
-                                    }
-                                ) {
-                                    Text("Eliminar", color = Color.Red)
-                                }
+                        OutlinedButton(
+                            onClick = {
+                                onEvent(PrioridadIntent.nuevo)
                             },
-                            dismissButton = {
-                                OutlinedButton(onClick = { showDialog = false }) {
-                                    Text(text = "cancelar")
+                            modifier = Modifier.padding(0.dp, 0.dp, 7.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Nuevo"
+                            )
+                            Text(text = "Nuevo")
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                if (prioridadId > 0) {
+                                    onEvent(PrioridadIntent.editarPrioridad(prioridadId = prioridadId))
+                                } else {
+                                    onEvent(PrioridadIntent.savePrioridad)
                                 }
-                            })
+
+                                keyboardController?.hide()
+                                scope.launch {
+
+                                    snackbarHostState.showSnackbar(
+                                        "Prioridad editada correctamente"
+                                    )
+                                    onEvent(PrioridadIntent.nuevo)
+                                    keyboardController?.hide()
+                                }
+
+                            }
+
+
+                        ) {
+
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Guardar"
+                            )
+                            if (prioridadId > 0) {
+                                Text(text = "Editar")
+                            } else {
+
+                                Text(text = "Guardar")
+                            }
+                        }
+                        LaunchedEffect(prioridadId) {
+                            if (prioridadId > 0) {
+                                onEvent(PrioridadIntent.editarPrioridad(prioridadId))
+                            }
+                        }
+
+                        if (prioridadId > 0) {
+                            OutlinedButton(onClick = { showDialog = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Eliminar",
+                                    tint = Color.Red
+                                )
+
+                                Text(text = "Eliminar", color = Color.Red)
+                            }
+
+                            if (showDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showDialog = false },
+                                    title = { Text(text = "Confirmar eliminación") },
+                                    text = { Text(text = "Estas seguro de que desea eliminar esta prioridad?") },
+                                    confirmButton = {
+                                        OutlinedButton(
+                                            onClick = {
+
+                                                onEvent(PrioridadIntent.deletePrioridad)
+                                                showDialog = false
+                                                scope.launch {
+
+                                                    snackbarHostState.showSnackbar(
+                                                        "Prioridad eliminada correctamente",
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                    goPriordadList()
+                                                }
+                                            }
+                                        ) {
+                                            Text("Eliminar", color = Color.Red)
+                                        }
+                                    },
+                                    dismissButton = {
+                                        OutlinedButton(onClick = { showDialog = false }) {
+                                            Text(text = "cancelar")
+                                        }
+                                    })
+                            }
+                        }
                     }
                 }
             }

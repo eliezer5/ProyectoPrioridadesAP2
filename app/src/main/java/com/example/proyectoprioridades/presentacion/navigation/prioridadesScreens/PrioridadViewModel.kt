@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectoprioridades.repository.PrioridadRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -23,16 +24,19 @@ class PrioridadViewModel @Inject constructor(
 
     private fun save() {
         viewModelScope.launch {
-            if(_uiState.value.descripcion.isBlank() && _uiState.value.diasCompromiso.toString().isBlank()){
-                 _uiState.update {
-                     it.copy(errorMessage = "Campos vacios")
-                 }
-            }
-            else {
+            if (validar()) {
                 prioridadRepository.save(_uiState.value.toEntity())
+                nuevo()
+
+            } else {
+                // Muestra el error
+                _uiState.update {
+                    it.copy(errorMessage = uiState.value.errorMessage)
+                }
             }
         }
     }
+
 
     private fun nuevo() {
         _uiState.update {
@@ -104,8 +108,35 @@ class PrioridadViewModel @Inject constructor(
 
             }
     }
+    private fun validar(): Boolean {
+        if (uiState.value.descripcion.isBlank() && uiState.value.diasCompromiso == 0) {
+            _uiState.update {
+                it.copy(errorMessage = "todos los campos estan vacios")
+            }
+            return false
+        }
 
-     fun onEvent(event: PrioridadIntent){
+        if (uiState.value.descripcion.isBlank()) {
+            _uiState.update {
+                it.copy(errorMessage = "La descripción está vacía")
+            }
+            return false
+        }
+
+         else if (uiState.value.diasCompromiso == 0) { // Cambiado para verificar que no sea menor a 0
+            _uiState.update {
+                it.copy(errorMessage = "El día de compromiso no puede ser menor que 0")
+            }
+            return false
+        }
+        _uiState.update {
+            it.copy(errorMessage = null) // Limpia el error si la validación es correcta
+        }
+        return true
+    }
+
+
+    fun onEvent(event: PrioridadIntent){
         when(event) {
             is PrioridadIntent.onPrioridadIdChange -> onPrioridadIdChange(event.prioridadId)
             PrioridadIntent.deletePrioridad -> delete()
@@ -116,6 +147,7 @@ class PrioridadViewModel @Inject constructor(
             PrioridadIntent.getPrioridades -> getPrioridades()
             is PrioridadIntent.editarPrioridad -> editarPrioridad(event.prioridadId)
             is PrioridadIntent.buscarDescripcion -> onBuscarDescripcion(event.descripcion)
+            is PrioridadIntent.validar -> validar()
         }
     }
 

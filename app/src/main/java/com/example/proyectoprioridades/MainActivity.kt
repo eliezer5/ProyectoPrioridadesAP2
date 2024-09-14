@@ -5,18 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import androidx.room.Room
 import com.example.proyectoprioridades.local.data.database.PrioridadDb
 import com.example.proyectoprioridades.presentacion.navigation.Screen
 import com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens.PrioridadListScreen
@@ -65,9 +60,11 @@ class MainActivity : ComponentActivity() {
 
             composable<Screen.Prioridad>{
                 val viewModel: PrioridadViewModel = hiltViewModel()
+                val prioridadId = it.toRoute<Screen.Prioridad>().prioridadId
                 PrioridadScreen(
                     goPriordadList = {navHostController.navigate(Screen.PrioridadList)},
-                    onEvent = {event -> viewModel.onEvent(event) }
+                    onEvent = { event -> viewModel.onEvent(event) },
+                    prioridadId = prioridadId
                 )
             }
         }
