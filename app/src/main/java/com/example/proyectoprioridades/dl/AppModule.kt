@@ -23,7 +23,12 @@ object AppModule {
         ).fallbackToDestructiveMigration()
             .build()
 
+    @Singleton
     @Provides
     fun providePrioridadDao(prioridadDb: PrioridadDb)= prioridadDb.PrioridadDao()
 
+
+    @Provides
+    @Singleton
+    fun provideTicketDao(prioridadDb: PrioridadDb) = prioridadDb.TicketDao()
 }

@@ -1,10 +1,15 @@
 package com.example.proyectoprioridades.presentacion.navigation.prioridadesScreens
 
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.example.proyectoprioridades.local.data.entities.PrioridadEntity
 import com.example.proyectoprioridades.repository.PrioridadRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -14,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PrioridadViewModel @Inject constructor(
     private val prioridadRepository: PrioridadRepository
-) : ViewModel(){
+) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
@@ -26,17 +31,15 @@ class PrioridadViewModel @Inject constructor(
         viewModelScope.launch {
             if (validar()) {
                 prioridadRepository.save(_uiState.value.toEntity())
-                nuevo()
 
             } else {
-                // Muestra el error
                 _uiState.update {
                     it.copy(errorMessage = uiState.value.errorMessage)
                 }
+
             }
         }
     }
-
 
     private fun nuevo() {
         _uiState.update {
@@ -50,9 +53,9 @@ class PrioridadViewModel @Inject constructor(
         }
     }
 
-    private fun editarPrioridad(prioridadId: Int){
+    private fun editarPrioridad(prioridadId: Int) {
         viewModelScope.launch {
-            if (prioridadId> 0){
+            if (prioridadId > 0) {
                 val prioridad = prioridadRepository.getPrioridad(prioridadId)
                 _uiState.update {
                     it.copy(
@@ -66,15 +69,15 @@ class PrioridadViewModel @Inject constructor(
         }
     }
 
-    private fun delete(){
+    private fun delete() {
         viewModelScope.launch {
             prioridadRepository.delete(_uiState.value.toEntity())
         }
     }
 
-    private fun getPrioridades(){
+    private fun getPrioridades() {
         viewModelScope.launch {
-            prioridadRepository.getPrioridades().collect{ prioridades ->
+            prioridadRepository.getPrioridades().collect { prioridades ->
                 _uiState.update {
                     it.copy(prioridades = prioridades)
                 }
@@ -82,33 +85,35 @@ class PrioridadViewModel @Inject constructor(
         }
     }
 
-    private fun onPrioridadIdChange(prioridadId: Int){
+    fun getPrioridadesInput(): Flow<List<PrioridadEntity>> {
+        return prioridadRepository.getPrioridades()
+    }
+
+    private fun onPrioridadIdChange(prioridadId: Int) {
         _uiState.update {
             it.copy(prioridadId = prioridadId)
         }
     }
 
-    private fun onDescripcionChange(descripcion:String){
+    private fun onDescripcionChange(descripcion: String) {
         _uiState.update {
             it.copy(descripcion = descripcion)
         }
     }
 
-    private fun onDiasCompromisoChange(diaCompromiso: Int){
+    private fun onDiasCompromisoChange(diaCompromiso: Int) {
         _uiState.update {
-            it.copy(diasCompromiso =diaCompromiso )
+            it.copy(diasCompromiso = diaCompromiso)
         }
     }
 
-    private fun onBuscarDescripcion(descripcion: String) {
-            viewModelScope.launch {
+    private suspend fun onBuscarDescripcion(descripcion: String): PrioridadEntity? {
 
-                prioridadRepository.buscarDescripcion(descripcion)
+            return prioridadRepository.buscarDescripcion(descripcion)
 
-
-            }
     }
-    private fun validar(): Boolean {
+
+    suspend fun validar(): Boolean {
         if (uiState.value.descripcion.isBlank() && uiState.value.diasCompromiso == 0) {
             _uiState.update {
                 it.copy(errorMessage = "todos los campos estan vacios")
@@ -123,21 +128,36 @@ class PrioridadViewModel @Inject constructor(
             return false
         }
 
-         else if (uiState.value.diasCompromiso == 0) { // Cambiado para verificar que no sea menor a 0
+        if (uiState.value.diasCompromiso == 0) {
             _uiState.update {
                 it.copy(errorMessage = "El día de compromiso no puede ser menor que 0")
             }
             return false
         }
+        val descripcionExistente = onBuscarDescripcion(uiState.value.descripcion)
+        if (descripcionExistente != null) {
+            _uiState.update {
+                it.copy(errorMessage = "Esta descripción ya existe")
+            }
+            return false
+        }
         _uiState.update {
-            it.copy(errorMessage = null) // Limpia el error si la validación es correcta
+            it.copy(errorMessage = null)
         }
         return true
     }
 
+    fun getDescripcionById(prioridadId: Int): String {
 
-    fun onEvent(event: PrioridadIntent){
-        when(event) {
+        val descripcion =
+            uiState.value.prioridades.firstOrNull { it.prioridadId == prioridadId }?.descripcion
+                ?: ""
+
+        return descripcion
+    }
+
+    fun onEvent(event: PrioridadIntent) {
+        when (event) {
             is PrioridadIntent.onPrioridadIdChange -> onPrioridadIdChange(event.prioridadId)
             PrioridadIntent.deletePrioridad -> delete()
             PrioridadIntent.nuevo -> nuevo()
@@ -146,10 +166,7 @@ class PrioridadViewModel @Inject constructor(
             PrioridadIntent.savePrioridad -> save()
             PrioridadIntent.getPrioridades -> getPrioridades()
             is PrioridadIntent.editarPrioridad -> editarPrioridad(event.prioridadId)
-            is PrioridadIntent.buscarDescripcion -> onBuscarDescripcion(event.descripcion)
-            is PrioridadIntent.validar -> validar()
+            PrioridadIntent.getPrioridadesInput -> getPrioridadesInput()
         }
     }
-
-
 }

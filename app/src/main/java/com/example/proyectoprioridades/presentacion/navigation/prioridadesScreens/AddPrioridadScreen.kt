@@ -45,19 +45,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 
 import androidx.compose.runtime.LaunchedEffect
+import com.example.proyectoprioridades.presentacion.navigation.menuScreens.menuDesplegable
 import kotlinx.coroutines.launch
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun PrioridadScreen(
     viewModel: PrioridadViewModel = hiltViewModel(),
     onEvent: (PrioridadIntent) -> Unit,
     goPriordadList: () -> Unit,
-    prioridadId: Int
+    prioridadId: Int,
 
-) {
+    ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     PrioridadBodyScreen(onEvent, uiState, goPriordadList, prioridadId)
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,18 +68,21 @@ fun PrioridadBodyScreen(
     onEvent: (PrioridadIntent) -> Unit,
     uiState: UiState,
     goPriordadList: () -> Unit,
-    prioridadId: Int
+    prioridadId: Int,
 
 
-) {
-    var descripcion by remember { mutableStateOf("") }
-    var diaCompromiso by remember { mutableStateOf("") }
-    var errorMessage: String? by remember { mutableStateOf(null) }
+    ) {
     var showDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
+    val prioridadView: PrioridadViewModel = hiltViewModel()
 
+    LaunchedEffect(key1 = true) {
+        if (prioridadId > 0) {
+            onEvent(PrioridadIntent.editarPrioridad(prioridadId))
+        }
+    }
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -86,7 +91,6 @@ fun PrioridadBodyScreen(
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Añadir Prioridad")
             }
-
         },
         snackbarHost = {
             SnackbarHost(
@@ -109,30 +113,10 @@ fun PrioridadBodyScreen(
                         .fillMaxWidth()
                         .padding(8.dp)
                 ) {
-
-//                    if (prioridadId > 0) {
-//
-//                        Text(
-//                            text = "Editar Prioridad",
-//                            style = MaterialTheme.typography.titleLarge,
-//                            modifier = Modifier
-//                                .align(Alignment.CenterHorizontally)
-//                                .padding(bottom = 15.dp)
-//                        )
-//                    } else {
-//                        Text(
-//                            text = "Agregar Prioridad",
-//                            style = MaterialTheme.typography.titleLarge,
-//                            modifier = Modifier
-//                                .align(Alignment.CenterHorizontally)
-//                                .padding(bottom = 15.dp)
-//                        )
-//                    }
-
                     OutlinedTextField(
                         label = { Text(text = "Descripción") },
                         value = uiState.descripcion,
-                        onValueChange = { it -> onEvent(PrioridadIntent.onDescripcionChange(it.toString())) },
+                        onValueChange = { onEvent(PrioridadIntent.onDescripcionChange(it)) },
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -151,10 +135,6 @@ fun PrioridadBodyScreen(
                     )
 
                     Spacer(modifier = Modifier.padding(2.dp))
-
-
-
-
                     uiState.errorMessage?.let { error ->
                         Text(text = error, color = Color.Red)
                     }
@@ -176,27 +156,34 @@ fun PrioridadBodyScreen(
                         }
                         OutlinedButton(
                             onClick = {
-                                if (prioridadId > 0) {
-                                    onEvent(PrioridadIntent.editarPrioridad(prioridadId = prioridadId))
-                                } else {
-                                    onEvent(PrioridadIntent.savePrioridad)
-                                }
-
-                                keyboardController?.hide()
                                 scope.launch {
 
-                                    snackbarHostState.showSnackbar(
-                                        "Prioridad editada correctamente"
-                                    )
-                                    onEvent(PrioridadIntent.nuevo)
-                                    keyboardController?.hide()
+                                    if (prioridadView.validar()) {
+
+                                        if (prioridadId > 0) {
+                                            onEvent(PrioridadIntent.savePrioridad)
+
+
+                                            snackbarHostState.showSnackbar(
+                                                "Prioridad editada correctamente"
+                                            )
+                                            keyboardController?.hide()
+                                            goPriordadList()
+
+                                        }
+                                        else{
+                                            onEvent(PrioridadIntent.savePrioridad)
+                                            delay(10)
+                                            onEvent(PrioridadIntent.nuevo)
+                                            snackbarHostState.showSnackbar(
+                                                "Prioridad guardada correctamente"
+                                            )
+                                        }
+                                    }
                                 }
-
+                                keyboardController?.hide()
                             }
-
-
                         ) {
-
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Guardar"
@@ -206,11 +193,6 @@ fun PrioridadBodyScreen(
                             } else {
 
                                 Text(text = "Guardar")
-                            }
-                        }
-                        LaunchedEffect(prioridadId) {
-                            if (prioridadId > 0) {
-                                onEvent(PrioridadIntent.editarPrioridad(prioridadId))
                             }
                         }
 
@@ -224,7 +206,6 @@ fun PrioridadBodyScreen(
 
                                 Text(text = "Eliminar", color = Color.Red)
                             }
-
                             if (showDialog) {
                                 AlertDialog(
                                     onDismissRequest = { showDialog = false },
@@ -253,7 +234,8 @@ fun PrioridadBodyScreen(
                                         OutlinedButton(onClick = { showDialog = false }) {
                                             Text(text = "cancelar")
                                         }
-                                    })
+                                    }
+                                )
                             }
                         }
                     }
@@ -262,4 +244,3 @@ fun PrioridadBodyScreen(
         }
     }
 }
-
